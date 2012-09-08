@@ -9,7 +9,7 @@ rud-filedone.o: rud-filedone.c
 	$(CC) $(CFLAGS) rud-filedone.c
 
 clean:
-	rm rud-filedone.o rud-filedone
+	rm -f rud-filedone rud-filedone.o rud-filedone.tar.bz
 
 install: rud-filedone
 ifndef DEST
@@ -22,4 +22,10 @@ else
   endif
 endif
 
-.PHONY: install clean
+bundle:
+	mkdir -p /tmp/rud-filedone
+	cp rud-filedone.c Makefile README /tmp/rud-filedone/
+	tar -C /tmp/ -f rud-filedone.tar.bz -v -j -c rud-filedone
+	rm -rf /tmp/rud-filedone
+
+.PHONY: install clean bundle
