@@ -1,10 +1,12 @@
 Hello ya'll
 
-This is a small c program I wrote to write things to the gllog that two different scripts of mine use.
+This is a small c program I wrote to write things to the gllog that two
+different scripts of mine use.
 
 It should be set as post_check in your glftpd.conf
 
-There are a few variables in a few #defines in the beginning of the c file, be sure to check those out (paths and stufF).
+There are a few variables in a few #defines in the beginning of the c file,
+be sure to check those out (paths and stufF).
 
 After you fixed the config, install like so:
 
@@ -12,3 +14,16 @@ make install DEST=<destination>
 
 And a real example:
 make install DEST=/jail/glftpd/bin/
+
+With this package (so far) rud-mkvsize.tcl is included, it needs to be fixed
+a bit though to work as a pzs-ng plugin and load itself and so on.
+
+For now, copy it somewhere into your bot and source it after your pzs-ng and
+it should work.
+
+There's no config at all in it yet, so if you want to change anything with
+output or so, please hack it.
+
+
+Best regards
+rudenstam
