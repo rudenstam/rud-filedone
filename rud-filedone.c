@@ -14,8 +14,6 @@
 #define GL_LOG "/ftp-data/logs/glftpd.log"
 #define LOG_FILE "/ftp-data/logs/rud-filedone.log"
 
-// sample-imsorny-cornelis.720p.mkv /site/fun/Skrivbord-iND/Sample 94174032
-
 int writeLog(const char *filename, const char *msg) {
 	FILE *fp;
 
@@ -122,24 +120,3 @@ int main(int argc, char *argv[]) {
 
 	exit(0);
 }
-
-
-// Wed Sep 05 20:56:07 2012 MKV_DONE: /site/fun/Skrivbord-iND/Sample sample-imsorny-cornelis.720p.mkv
-
-/*
-
-        set filename [lindex $argv 1]
-        set path [lindex $argv 2]
-
-
-        set part ""
-        if { ([file extension $filename] eq ".rar" && ![regexp {.*part(\d+?)\.rar$} $filename -> part]) || [regexp {0+1$} $part] } {
-                logit "[clock format [clock seconds] -format "%a %b %d %T %Y"] FIRST_RAR: $path $filename"
-                gllog "[clock format [clock seconds] -format "%a %b %d %T %Y"] FIRST_RAR: $path $filename"
-        } elseif {[file extension $filename] eq ".mkv" } {
-                logit "[clock format [clock seconds] -format "%a %b %d %T %Y"] MKV_DONE: $path $filename"
-                gllog "[clock format [clock seconds] -format "%a %b %d %T %Y"] MKV_DONE: $path $filename"
-        }
-
-
-*/
