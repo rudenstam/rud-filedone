@@ -41,8 +41,6 @@ int firstRar(const char *filename) {
 	tmp = filename+strlen(filename)-5;
 
 
-	printf("rar name: %s\n", filename);
-
 	int i;
 	for (i = 0; tmp > filename; i++) {
 		if (!isdigit(tmp[0])) {
@@ -61,11 +59,9 @@ int firstRar(const char *filename) {
 		memset(digits, 0, sizeof(digits));
 		strncpy(digits, tmp+1, filename+strlen(filename)-5-tmp);
 		value = atoi(digits);
-		printf("value: %d\n", value);
 
 		memset(part, 0, sizeof(part));
 		strncpy(part, tmp-3, 4);
-		printf("part: %s\n", part);
 
 		if ((value == 1 && !strncmp(part, "part", 4)) || strncmp(part, "part", 4)) {
 			firstRar = 1;
@@ -90,9 +86,7 @@ int main(int argc, char *argv[]) {
 
 		memcpy(new_argv, argv, sizeof(char *) * (argc+1));
 		new_argv[0] = ZIPSCRIPT;
-		printf("execiting %s\n", ZIPSCRIPT);
 		execv(ZIPSCRIPT, new_argv);
-		printf("child exiting\n");
 		exit(127);
 	}
 
@@ -117,7 +111,6 @@ int main(int argc, char *argv[]) {
 	} else if (!strcmp(ext, "rar")) {
 #if PROCESS_RAR == 1
 		if (firstRar(filename)) {
-			printf("firstrar!\n");
 			snprintf(completeString, sizeof(completeString), "%s FIRST_RAR: %s %s\n", timeStr, path, filename);
 			writeLog(GL_LOG, completeString);
 			writeLog(LOG_FILE, completeString);
@@ -125,9 +118,7 @@ int main(int argc, char *argv[]) {
 #endif
 	}
 
-	printf("waiting on child\n");
 	wait(NULL);
-	printf("exiting from parent\n");
 
 	exit(0);
 }
