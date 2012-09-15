@@ -89,8 +89,9 @@ int main(int argc, char *argv[]) {
 			argc = 4;
 		char *new_argv[argc+1];
 
-		memcpy(new_argv, argv, sizeof(char *) * (argc+1));
+		memcpy(new_argv, argv, sizeof(char *) * argc);
 		new_argv[0] = ZIPSCRIPT;
+		new_argv[argc] = (char *)NULL;
 		if (debug) {
 			int i;
 			for (i = 0; i < argc; i++) {
