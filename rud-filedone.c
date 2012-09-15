@@ -31,7 +31,7 @@ int writeLog(const char *filename, const char *msg) {
 close:
 	fclose(fp);
 error:
-	return errno;
+	return -errno;
 }
 
 int firstRar(const char *filename) {
