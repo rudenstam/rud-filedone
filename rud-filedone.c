@@ -35,41 +35,36 @@ error:
 }
 
 int firstRar(const char *filename) {
-	int firstRar = 0;
 	const char *tmp;
 
 	tmp = filename+strlen(filename)-5;
-
 
 	int i;
 	for (i = 0; tmp > filename; i++) {
 		if (!isdigit(tmp[0])) {
 			if (i == 0)
-				firstRar = 1;
+				return 1;
 			break;
 		}
 		tmp--;
 	}
 
-	if (!firstRar) {
-		char digits[16];
-		char part[5];
-		int value;
+	char digits[16];
+	char part[5];
+	int value;
 
-		memset(digits, 0, sizeof(digits));
-		strncpy(digits, tmp+1, filename+strlen(filename)-5-tmp);
-		value = atoi(digits);
+	memset(digits, 0, sizeof(digits));
+	strncpy(digits, tmp+1, filename+strlen(filename)-5-tmp);
+	value = atoi(digits);
 
-		memset(part, 0, sizeof(part));
-		strncpy(part, tmp-3, 4);
+	memset(part, 0, sizeof(part));
+	strncpy(part, tmp-3, 4);
 
-		if ((value == 1 && !strncmp(part, "part", 4)) || strncmp(part, "part", 4)) {
-			firstRar = 1;
-		}
+	if ((value == 1 && !strncmp(part, "part", 4)) || strncmp(part, "part", 4)) {
+		return 1;
 	}
 
-
-	return firstRar;
+	return 0;
 }
 
 int main(int argc, char *argv[]) {
