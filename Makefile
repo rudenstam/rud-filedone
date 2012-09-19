@@ -1,9 +1,9 @@
-CC=gcc
-CFLAGS=-c -Wall -O2
+CC := gcc
+CFLAGS := -c -Wall -O2
 
-VERSION=0.1
+VERSION := 0.1.1
 
-SHA1=$(shell git show | head -n 1 | sed s/"commit "// | head -c 6)
+SHA1 := $(shell git show | head -n 1 | sed s/"commit "// | head -c 6)
 
 all: rud-filedone
 
