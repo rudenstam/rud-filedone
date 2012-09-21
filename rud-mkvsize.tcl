@@ -1,18 +1,11 @@
 ##########################################################################
 # dZSbot - mkvsize Plug-in                                               #
 ##########################################################################
-#
-# 0.1.1 Fixed the header reading, now reads the size properly
-#
-# 0.1 Initial release
-#
-##########################################################################
-
 
 if {[info procs ::rud::mkvsize::deinit] != ""} {::rud::mkvsize::deinit}
 
 namespace eval ::rud::mkvsize {
-	variable version "0.1.1"
+	variable version "0.2"
 
 	variable scriptName [namespace current]::check
 	bind evnt -|- prerehash [namespace current]::deinit
