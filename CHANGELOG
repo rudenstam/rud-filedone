@@ -1,0 +1,20 @@
+0.2:
+b05dbe9 Added a CHANGELOG
+63697a6 Update version to 0.2
+cf7ffbc Clean up Makefile a bit
+8c4df8f Change variable declarations in Makefile to use := instead of =.
+9ecfa2f Use strrchr instead of strsep to find the filename extension
+873dd03 Simplify firstRar
+8c7f3da Don't trust argv to contain terminating NULL
+1c021bd Return negative errno from writeLog
+74befad Added test code and test script
+
+0.1:
+6dab01d Added version string to bundle package.
+babb53f Removed tcl snippets from rud-filedone.c.
+3f10145 Add rud-mkvsize.tcl. Adapt Makefile and README for it.
+363cf0c Add a bundle target to create a rud-filedone.tar.bz of .c, README and Makefile.
+db2a6db Added a README file with install instructions.
+bb05f98 Added install and clean targets.
+4b4c303 Removed debug prints.
+854bbb3 First serious c program, jay!
