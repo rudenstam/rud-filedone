@@ -14,6 +14,8 @@
 #define GL_LOG "/ftp-data/logs/glftpd.log"
 #define LOG_FILE "/ftp-data/logs/rud-filedone.log"
 
+static int debug = 0;
+
 int writeLog(const char *filename, const char *msg) {
 	FILE *fp;
 
@@ -79,13 +81,29 @@ int main(int argc, char *argv[]) {
 	char *newstring;
 	char completeString[4096];
 
+	if (argc != 4)
+		debug = 1;
+
 	if (fork() == 0) {
+		if (argc > 4)
+			argc = 4;
 		char *new_argv[argc+1];
 
 		memcpy(new_argv, argv, sizeof(char *) * (argc+1));
 		new_argv[0] = ZIPSCRIPT;
-		execv(ZIPSCRIPT, new_argv);
-		exit(127);
+		if (debug) {
+			int i;
+			for (i = 0; i < argc; i++) {
+				writeLog("rud-filedone-zipscript.log", new_argv[i]);
+				if (i != argc-1)
+					writeLog("rud-filedone-zipscript.log", " ");
+			}
+			writeLog("rud-filedone-zipscript.log", "\n");
+			exit(0);
+		} else {
+			execv(ZIPSCRIPT, new_argv);
+			exit(127);
+		}
 	}
 
 	t = time(NULL);
@@ -103,15 +121,23 @@ int main(int argc, char *argv[]) {
 	if (!strcmp(ext, "mkv")) {
 #if PROCESS_MKV == 1
 		snprintf(completeString, sizeof(completeString), "%s MKV_DONE: %s %s\n", timeStr, path, filename);
-		writeLog(GL_LOG, completeString);
-		writeLog(LOG_FILE, completeString);
+		if (debug) {
+			writeLog("rud-filedone-glftpd.log", completeString);
+		} else {
+			writeLog(GL_LOG, completeString);
+			writeLog(LOG_FILE, completeString);
+		}
 #endif
 	} else if (!strcmp(ext, "rar")) {
 #if PROCESS_RAR == 1
 		if (firstRar(filename)) {
 			snprintf(completeString, sizeof(completeString), "%s FIRST_RAR: %s %s\n", timeStr, path, filename);
-			writeLog(GL_LOG, completeString);
-			writeLog(LOG_FILE, completeString);
+			if (debug) {
+				writeLog("rud-filedone-glftpd.log", completeString);
+			} else {
+				writeLog(GL_LOG, completeString);
+				writeLog(LOG_FILE, completeString);
+			}
 		}
 #endif
 	}

@@ -28,8 +28,20 @@ endif
 
 bundle:
 	mkdir -p /tmp/rud-filedone
-	cp rud-filedone.c Makefile README rud-mkvsize.tcl /tmp/rud-filedone/
+	cp rud-filedone.c Makefile README rud-mkvsize.tcl rud-filedone-test.tcl /tmp/rud-filedone/
 	tar -C /tmp/ -f rud-filedone.$(VERSION).$(SHA1).tar.bz -v -j -c rud-filedone
 	rm -rf /tmp/rud-filedone
 
-.PHONY: install clean bundle
+test: rud-filedone
+ifndef BIN
+	$(error Usage: make test BIN=<path to rud-filedone>)
+else
+  ifeq (,$(wildcard $(BIN)))
+	$(error $(BIN) doesn't exist.)
+  else
+	@./rud-filedone-test.tcl $(BIN)
+  endif
+endif
+
+
+.PHONY: install clean bundle test
