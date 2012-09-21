@@ -73,7 +73,6 @@ int main(int argc, char *argv[]) {
 	time_t t;
 	char timeStr[128];
 	char *ext = "";
-	char *newstring;
 	char completeString[4096];
 
 	if (argc != 4)
@@ -105,16 +104,9 @@ int main(int argc, char *argv[]) {
 	t = time(NULL);
 	strftime(timeStr, sizeof(timeStr), "%a %b %e %T %Y", localtime(&t));
 
-	char *tmp = strdup(filename);
-	while (1) {
-		newstring = strsep(&tmp, ".");
-		if (newstring)
-			ext = newstring;
-		else
-			break;
-	}
+	ext = strrchr(filename, '.');
 
-	if (!strcmp(ext, "mkv")) {
+	if (!strcmp(ext, ".mkv")) {
 #if PROCESS_MKV == 1
 		snprintf(completeString, sizeof(completeString), "%s MKV_DONE: %s %s\n", timeStr, path, filename);
 		if (debug) {
@@ -124,7 +116,7 @@ int main(int argc, char *argv[]) {
 			writeLog(LOG_FILE, completeString);
 		}
 #endif
-	} else if (!strcmp(ext, "rar")) {
+	} else if (!strcmp(ext, ".rar")) {
 #if PROCESS_RAR == 1
 		if (firstRar(filename)) {
 			snprintf(completeString, sizeof(completeString), "%s FIRST_RAR: %s %s\n", timeStr, path, filename);
