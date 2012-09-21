@@ -3,7 +3,7 @@ VERSION := 0.2
 CC := gcc
 CFLAGS := -c -Wall -O2
 
-SHA1 := $(shell git show | head -n 1 | sed s/"commit "// | head -c 6)
+SHA1 = $(shell git show | head -n 1 | sed s/"commit "// | head -c 6)
 
 rud-filedone : rud-filedone.o
 
