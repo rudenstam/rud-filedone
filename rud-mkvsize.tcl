@@ -5,7 +5,8 @@
 if {[info procs ::rud::mkvsize::deinit] != ""} {::rud::mkvsize::deinit}
 
 namespace eval ::rud::mkvsize {
-	variable version "0.2"
+	## Keep version in sync with the Makefile
+	variable version "0.3"
 
 	variable scriptName [namespace current]::check
 	bind evnt -|- prerehash [namespace current]::deinit
@@ -15,6 +16,7 @@ proc ::rud::mkvsize::init {args} {
 	global postcommand msgtypes variables announce
 	variable version
 	variable scriptName
+	variable mkvSize 0
 
 	## Register the event handler.
 	lappend postcommand(MKV_DONE) $scriptName
@@ -58,20 +60,6 @@ proc rud::mkvsize::log {text} {
 	putlog "rud-mkvsize -> $text"
 }
 
-proc ::rud::mkvsize::readWeirdInt {buffer} {
-	set result 0
-	if {[catch {
-		set binary [a2b [string index $buffer 0]]
-		set first [string first "1" $binary]
-		set sizebuffer [string range $buffer 0 $first]
-		set binary [string range [d2b [a2d $sizebuffer] 1] [expr {$first + 1}] end]
-		set result [a2d [string range $buffer [expr {$first+1}] [expr {$first+[b2d $binary]}]]]
-	} err]} {
-		log $err
-	}
-	return $result
-}
-
 proc ::rud::mkvsize::formatBytes {bytes} {
 	set suffixes [list bytes KiB MiB GiB TiB]
 	set i 0
@@ -86,50 +74,39 @@ proc ::rud::mkvsize::check {event section logdata} {
 	set path "$::glroot[lindex $logdata 0]"
 	set file [lindex $logdata 1]
 
-	doit $file $path $section
+	doIt $file $path $section
 
 	return 1
 }
 
-proc ::rud::mkvsize::doit [list theFile theDir section [list outchan $::mainchan]] {
-	# Read first 64 kb from file to use for info
+proc ::rud::mkvsize::doIt [list theFile theDir section [list outchan $::mainchan]] {
+	variable mkvSize
+
 	set fp [open $theDir/$theFile r]
-	fconfigure $fp -translation binary
-	set data [read $fp 65536]
+
+	chan configure $fp -translation binary
+
+	set res 1
+	while {![eof $fp] && $res} {
+		set res [parseChunk $fp]
+		if {$res == -1} {
+			log "parseChunk returned -1 at position [tell $fp], eof: [eof $fp]"
+		}
+	}
 	close $fp
 
-	set what [lindex [split $theDir "/"] end-1]
-
-	set segmentstart [string first "\x18\x53\x80\x67" $data]
-
-	if {$segmentstart == -1} {
-		log "No segmentstart found"
-		return
-	}
-
-	# Get the expected file size (mkvdata +  mkvheader)
-	set mkvsizevar(first) [string index $data [expr {$segmentstart+4}]]
-	set mkvsizevar(firstbin) [d2b [a2d $mkvsizevar(first)] 1]
-	set mkvsizevar(readbytes) [string first "1" $mkvsizevar(firstbin)]
-	set mkvsizevar(segmentend) [expr {$segmentstart+4+$mkvsizevar(readbytes)}]
-	set mkvsizevar(whole) [string range $data [expr {$segmentstart+4}] $mkvsizevar(segmentend)]
-	set mkvsizevar(wholebin) [string range [d2b [a2d $mkvsizevar(whole)]] 1 end]
-	set mkvsizevar(bytes) [b2d $mkvsizevar(wholebin)]
-	set headerbytes [expr {$mkvsizevar(segmentend)+1}]
-	set mkvsize [expr {$mkvsizevar(bytes) + $headerbytes}]
-
 	set filesize [file size $theDir/$theFile]
-	if {$mkvsize == $filesize} {
+	if {$mkvSize == $filesize} {
 		set status 1
 	} else {
 		set status 0
 	}
 
-	set releasename [lindex [split $theDir "/"] end-1]
+	set releaseName [lindex [split $theDir "/"] end-1]
 	if {$status} {
-		set outmsg "< \00303$section \017> \002$releasename\002 -> $theFile -> \00303OK\017"
+		set outmsg "< \00303$section \017> \002$releaseName\002 -> $theFile -> \00303OK\017"
 	} else {
-		set outmsg "< \00303$section \017> \002$releasename\002 -> $theFile -> \00304$mkvsize ([formatBytes $mkvsize]) expected, $filesize ([formatBytes $filesize]) found\017"
+		set outmsg "< \00303$section \017> \002$releaseName\002 -> $theFile -> \00304$mkvSize ([formatBytes $mkvSize]) expected, $filesize ([formatBytes $filesize]) found\017"
 	}
 	putserv "PRIVMSG $outchan :$outmsg"
 }
@@ -143,13 +120,100 @@ proc ::rud::mkvsize::irccheck {nick uhost hand chan arg} {
 
 	if {[llength $files] > 0} {
 		foreach item $files {
-			doit [lindex [split $item "/"] end] [join [lrange [split $path "/"] 0 end-1] "/"] "irc" $chan
+			doIt [lindex [split $item "/"] end] [join [lrange [split $path "/"] 0 end-1] "/"] "irc" $chan
 		}
 	} else {
 		putserv "PRIVMSG $chan :No mkv files found in $arg"
 	}
 
 	return 1
+}
+
+#
+# EBML parsing
+#
+proc ::rud::mkvsize::getId {fp} {
+	set data [read $fp 1]
+
+	if {[binary scan $data cu firstByte] != 1} {
+		return ""
+	}
+
+	set size 0
+	for {set i 7} {$i >= 0} {incr i -1} {
+		if {[expr {$firstByte & (1 << $i)}]} {
+			set size [expr 7-$i]
+			break
+                }
+        }
+
+	append data [read $fp $size]
+	binary scan $data H* id
+	return $id
+}
+
+proc ::rud::mkvsize::getSize {fp} {
+	set data [read $fp 1]
+
+	if {[binary scan $data cu firstByte] != 1} {
+		return -1
+	}
+
+	set size 0
+	for {set i 7} {$i >= 0} {incr i -1} {
+		if {[expr {$firstByte & (1 << $i)}]} {
+			set size [expr 7-$i]
+			break
+		}
+	}
+
+	set data [binary format cu [expr {$firstByte & ~(1 << (7-$size))}]]
+
+	binary scan $data cu test
+
+	append data [read $fp $size]
+	set data "[string repeat \00 [expr {8-[string length $data]}]]$data"
+	binary scan $data W sizeSize
+
+	return $sizeSize
+}
+
+proc ::rud::mkvsize::parseChunk {fp} {
+	variable mkvSize
+
+	set id [getId $fp]
+	set size [getSize $fp]
+
+	if {$id == "" || $size == -1} {
+		return -1
+	}
+
+	switch -exact -nocase $id {
+		18538067 {
+			set mkvSize [expr $size + [tell $fp]]
+			return 0
+		}
+
+		default {
+			seek $fp $size current
+		}
+	}
+
+	return 1
+}
+
+proc ::rud::mkvsize::parseFile {filename} {
+	set fp [open $filename r]
+	chan configure $fp -translation binary
+
+	set res 1
+	while {![eof $fp] && $res} {
+		set res [parseChunk $fp]
+		if {$res == -1} {
+			puts "parseChunk returned -1 at position [tell $fp], eof: [eof $fp]"
+		}
+	}
+	close $fp
 }
 
 ::rud::mkvsize::init

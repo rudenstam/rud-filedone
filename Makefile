@@ -1,4 +1,5 @@
-VERSION := 0.2
+# Keep this in sync with Tcl script which will print to partyline what version it uses
+VERSION := 0.3
 
 CC := gcc
 CFLAGS := -c -Wall -O2
