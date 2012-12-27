@@ -7,6 +7,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 	variable np [namespace qualifiers [namespace parent]]
 
 	variable ircTrigger "[set ${np}::cmdpre]mkvsize"
+	variable outputChan [set ${np}::mainchan]
 
 	## Keep version in sync with the Makefile
 	variable version "0.3"
@@ -23,9 +24,11 @@ namespace eval ::ngBot::plugin::mkvsize {
 		variable ${np}::variables
 		variable ${np}::precommand
 		variable ${np}::msgtypes
+		variable ${np}::redirect
 		variable scriptName
 		variable scriptFile
 		variable ircTrigger
+		variable outputChan
 		variable version
 
 		set variables(MKV_DONE_OK)    "%path %file %section %release %expectedSize %formatedExpectedSize %realSize %formatedRealSize"
@@ -43,6 +46,14 @@ namespace eval ::ngBot::plugin::mkvsize {
 
 		if {[info exists msgtypes(SECTION)] && [lsearch -exact $msgtypes(SECTION) $event] ==  -1} {
 			lappend msgtypes(SECTION) $event
+		}
+
+		if {![info exists redirect(${event}_OK)]} {
+			set redirect(${event}_OK) $outputChan
+		}
+
+		if {![info exists redirect(${event}_BAD)]} {
+			set redirect(${event}_BAD) $outputChan
 		}
 
 		bind pub -|- $ircTrigger [namespace current]::irc
@@ -67,6 +78,14 @@ namespace eval ::ngBot::plugin::mkvsize {
 
 		if {[info exists msgtypes(SECTION)] && [set pos [lsearch -exact $msgtypes(SECTION) $event]] !=  -1} {
 			set msgtypes(SECTION) [lreplace $msgtypes(SECTION) $pos $pos]
+		}
+
+		if {[info exists redirect(${event}_OK)]} {
+			unset redirect(${event}_OK)
+		}
+
+		if {[info exists redirect(${event}_BAD)]} {
+			unset redirect(${event}_BAD)
 		}
 
 		log "version $version unloadead."
