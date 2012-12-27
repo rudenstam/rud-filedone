@@ -3,6 +3,8 @@
 ##########################################################################
 
 namespace eval ::ngBot::plugin::mkvsize {
+	variable ircTrigger "!mkvsize"
+
 	## Keep version in sync with the Makefile
 	variable version "0.3"
 
@@ -25,10 +27,12 @@ namespace eval ::ngBot::plugin::mkvsize {
 		variable ${np}::msgtypes
 		variable scriptName
 		variable scriptFile
+		variable ircTrigger
 		variable version
 
-		set variables(MKV_DONE_OK)  "%path %file %section %release %expectedSize %formatedExpectedSize %realSize %formatedRealSize"
-		set variables(MKV_DONE_BAD) "%path %file %section %release %expectedSize %formatedExpectedSize %realSize %formatedRealSize"
+		set variables(MKV_DONE_OK)    "%path %file %section %release %expectedSize %formatedExpectedSize %realSize %formatedRealSize"
+		set variables(MKV_DONE_BAD)   "%path %file %section %release %expectedSize %formatedExpectedSize %realSize %formatedRealSize"
+		set variables(MKV_DONE_NOHIT) "%argument"
 
 		set theme_file [file normalize "[pwd]/[file rootname $scriptFile].zpt"]
 		if {[file isfile $theme_file]} {
@@ -43,6 +47,8 @@ namespace eval ::ngBot::plugin::mkvsize {
 			lappend msgtypes(SECTION) $event
 		}
 
+		bind pub -|- $ircTrigger [namespace current]::irc
+
 		log "version $version loaded."
 	}
 
@@ -51,6 +57,9 @@ namespace eval ::ngBot::plugin::mkvsize {
 		variable ${np}::precommand
 		variable version
 		variable scriptName
+		variable ircTrigger
+
+		catch {unbind pub -|- $ircTrigger [namespace current]::irc}
 
 		# Remove event handler
 		set event MKV_DONE
@@ -120,31 +129,123 @@ namespace eval ::ngBot::plugin::mkvsize {
 		}
 	}
 
-	proc irccheck {nick uhost hand chan arg} {
-		set path "$::glroot/site/[lindex $arg 0]"
+	proc irc {nick uhost hand chan arg} {
+		variable np
+		variable ${np}::glroot
 
-		if {![file isfile $path]} {
-			set files [glob -nocomplain -dir $path *.mkv]
+		set arg [lindex [split $arg] 0]
+
+		set path "$glroot/site/$arg"
+		set files [list]
+		set dir ""
+
+		if {[file isfile $path] && [file extension $path] == ".mkv"} {
+			set files [list $path]
+		} elseif {[file isdir $path]} {
+			set dir $path
+		} else {
+			set dir [findReleaseDir $arg]
 		}
 
-		if {[llength $files] > 0} {
-			foreach item $files {
-				set releaseName [lindex [file split $item] end-1]
-				set filename [lindex [file split $item] end]
-				set result [doIt $item]
-				if {[lindex $result 0]} {
-					set outmsg "< \00303irc \017> \002$releaseName\002 -> $fileName -> \00303OK\017"
-				} else {
-					set outmsg "< \00303$section \017> \002$releaseName\002 -> $theFile -> \00304$mkvSize ([formatBytes $mkvSize]) expected, $filesize ([formatBytes $filesize]) found\017"
-				}
-				log [lindex [split $item "/"] end] [join [lrange [split $path "/"] 0 end-1] "/"] "irc" $chan
+		if {[llength $files] == 0} {
+			if {$dir != ""} {
+				set files [findMkvInRelease $dir]
 			}
-		} else {
-			putserv "PRIVMSG $chan :No mkv files found in $arg"
-			log "No mkv files in $path"
+
+			if {[llength $files] == 0} {
+				lappend logdata $arg
+				set output [${np}::ng_format MKV_DONE_NOHIT irc $logdata]
+				set output [${np}::themereplace $output irc]
+				putserv "PRIVMSG $chan :$output"
+				return 1
+			}
+		}
+
+		foreach file $files {
+			set mkvSize [ebml::parseFile $file]
+			set fileSize [file size $file]
+			set formatedMkvSize [${np}::format_kb [expr $mkvSize/1024.0]]
+			set formatedFileSize [${np}::format_kb [expr $fileSize/1024.0]]
+
+			set path [file dirname [string range $file [string length $glroot] end]]
+			set fileName [file tail $file]
+			set release [findReleaseName $path]
+
+			lappend logdata $path $fileName irc $release $mkvSize $formatedMkvSize $fileSize $formatedFileSize
+			if {$mkvSize == $fileSize} {
+				set output [${np}::ng_format MKV_DONE_OK irc $logdata]
+			} else {
+				set output [${np}::ng_format MKV_DONE_BAD irc $logdata]
+			}
+			set output [${np}::themereplace $output irc]
+			putserv "PRIVMSG $chan :$output"
 		}
 
 		return 1
+	}
+
+	proc findReleaseName {path} {
+		variable np
+		variable ${np}::paths
+
+		set sectionFound 0
+		foreach {section sectionPath} [array get paths] {
+			if {[string match $sectionPath $path]} {
+				set path [string range $path [expr {[string length $sectionPath]-1}] end]
+				set sectionFound 1
+				break
+			}
+		}
+
+		set release "????"
+		if {$sectionFound} {
+			set release [lindex [file split $path] 0]
+		} else {
+			set chunks [file split $path]
+			for {set i [expr {[llength $chunks] -1}]} {$i >= 0} {incr i -1} {
+				if {[regexp {.*\..*\-.*} [lindex $chunks $i]]} {
+					set release [lindex $chunks $i]
+					break
+				}
+			}
+		}
+
+		return $release
+	}
+
+	proc findReleaseDir {release} {
+		variable np
+		variable ${np}::paths
+		variable ${np}::glroot
+
+		foreach {section path} [array get paths] {
+			if {[file isdir [set dir "$glroot[string range $path 0 end-1]$release"]]} {
+				return $dir
+			}
+		}
+		return ""
+	}
+
+	proc findMkvInRelease {dir} {
+		set files [glob -nocomplain -type f -dir $dir *.mkv]
+		if {[llength $files] == 0} {
+			set i 0
+			foreach subdir [glob -nocomplain -type d -dir $dir *] {
+				lappend files [glob -nocomplain -type f -dir $subdir *.mkv]
+				if {$i > 5} {
+					break
+				}
+				incr i
+			}
+		}
+
+		for {set i 0} {$i < [llength $files]} {incr i} {
+			while {[llength $files] > $i && [string trim [lindex $files $i]] == ""} {
+				set files [lreplace $files $i $i]
+			}
+		}
+
+		return $files
 	}
 
 	#
