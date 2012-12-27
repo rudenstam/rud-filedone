@@ -3,18 +3,16 @@
 ##########################################################################
 
 namespace eval ::ngBot::plugin::mkvsize {
-	variable ircTrigger "!mkvsize"
+	variable ns [namespace current]
+	variable np [namespace qualifiers [namespace parent]]
+
+	variable ircTrigger "[set ${np}::cmdpre]mkvsize"
 
 	## Keep version in sync with the Makefile
 	variable version "0.3"
 
-	variable ns [namespace current]
-	variable np [namespace qualifiers [namespace parent]]
-
 	variable scriptFile [info script]
 	variable scriptName [namespace current]::check
-
-	variable mainchan [set ${np}::mainchan]
 
 	proc log {args} {
 		putlog "\[mkvsize\] [join $args]"
