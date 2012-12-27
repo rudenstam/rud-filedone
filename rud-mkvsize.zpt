@@ -1,0 +1,2 @@
+announce.MKV_DONE_OK  = "< %c1{%section} > %release -> %file -> %c1{OK:} %expectedSize (%formatedExpectedSize)"
+announce.MKV_DONE_BAD = "< %c1{%section\ > %release -> %file -> %c2{%expectedSize (%formatedExpectedSize) expected, %realSize (%formatedRealSize) found}"
