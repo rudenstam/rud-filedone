@@ -26,6 +26,7 @@ else
 endif
 
 bundle :
+	rm rud-filedone.*.tar.bz
 	mkdir -p /tmp/rud-filedone
 	cp rud-filedone.c Makefile README rud-mkvsize.tcl rud-mkvsize.zpt rud-filedone-test.tcl CHANGELOG /tmp/rud-filedone/
 	tar -C /tmp/ -f rud-filedone.$(VERSION).$(SHA1).tar.bz -v -j -c rud-filedone
