@@ -271,7 +271,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 
 	namespace eval [namespace current]::ebml {
 		proc log {args} {
-			putlog "\[mkvsize::ebml\] [join $text]"
+			putlog "\[mkvsize::ebml\] [join $args]"
 		}
 
 		proc getId {fp} {
