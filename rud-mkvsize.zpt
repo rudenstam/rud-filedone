@@ -6,16 +6,16 @@
 # %section - The section
 # %release - The release name
 # %expectedSize - The expected file size in bytes
-# %formatedExpectedSize - The expected file size formatted
+# %formattedExpectedSize - The expected file size formatted
 # %realSize - The real file size in bytes
-# %formatedRealSize - The real file size formatted
+# %formattedRealSize - The real file size formatted
 # %argument - Text provided to irc trigger, only available in MKV_DONE_NOHIT
 
 # When expected == real
-announce.MKV_DONE_OK  = "< %c1{%section} > %release -> %file -> %c1{OK:} %expectedSize (%formatedExpectedSize)"
+announce.MKV_DONE_OK  = "< %c1{%section} > %release -> %file -> %c1{OK:} %expectedSize (%formattedExpectedSize)"
 
 # When expected != real
-announce.MKV_DONE_BAD = "< %c1{%section} > %release -> %file -> %c2{%expectedSize (%formatedExpectedSize) expected, %realSize (%formatedRealSize) found}"
+announce.MKV_DONE_BAD = "< %c1{%section} > %release -> %file -> %c2{%expectedSize (%formattedExpectedSize) expected, %realSize (%formattedRealSize) found}"
 
 # When irc trigger is used and we find no mkv file
 # Only %argument is valid here

@@ -31,8 +31,8 @@ namespace eval ::ngBot::plugin::mkvsize {
 		variable outputChan
 		variable version
 
-		set variables(MKV_DONE_OK)    "%path %file %section %release %expectedSize %formatedExpectedSize %realSize %formatedRealSize"
-		set variables(MKV_DONE_BAD)   "%path %file %section %release %expectedSize %formatedExpectedSize %realSize %formatedRealSize"
+		set variables(MKV_DONE_OK)    "%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
+		set variables(MKV_DONE_BAD)   "%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
 		set variables(MKV_DONE_NOHIT) "%argument"
 
 		set theme_file [file normalize "[pwd]/[file rootname $scriptFile].zpt"]
@@ -103,8 +103,8 @@ namespace eval ::ngBot::plugin::mkvsize {
 
 		lassign [doIt $abspath/$file] result mkvSize fileSize
 
-		set formatedMkvSize [${np}::format_kb [expr $mkvSize/1024.0]]
-		set formatedFileSize [${np}::format_kb [expr $fileSize/1024.0]]
+		set formattedMkvSize [${np}::format_kb [expr $mkvSize/1024.0]]
+		set formattedFileSize [${np}::format_kb [expr $fileSize/1024.0]]
 
 		if ($result) {
 			set event MKV_DONE_OK
@@ -113,7 +113,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 		}
 
 		set release [findRelease $path]
-		lappend logdata $section $release $mkvSize $formatedMkvSize $fileSize $formatedFileSize
+		lappend logdata $section $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize
 
 		set output [${np}::ng_format $event $section $logdata]
 		${np}::sndall $event $section $output
@@ -181,14 +181,14 @@ namespace eval ::ngBot::plugin::mkvsize {
 		foreach file $files {
 			set mkvSize [ebml::parseFile $file]
 			set fileSize [file size $file]
-			set formatedMkvSize [${np}::format_kb [expr $mkvSize/1024.0]]
-			set formatedFileSize [${np}::format_kb [expr $fileSize/1024.0]]
+			set formattedMkvSize [${np}::format_kb [expr $mkvSize/1024.0]]
+			set formattedFileSize [${np}::format_kb [expr $fileSize/1024.0]]
 
 			set path [file dirname [string range $file [string length $glroot] end]]
 			set fileName [file tail $file]
 			set release [findReleaseName $path]
 
-			lappend logdata $path $fileName irc $release $mkvSize $formatedMkvSize $fileSize $formatedFileSize
+			lappend logdata $path $fileName irc $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize
 			if {$mkvSize == $fileSize} {
 				set output [${np}::ng_format MKV_DONE_OK irc $logdata]
 			} else {
