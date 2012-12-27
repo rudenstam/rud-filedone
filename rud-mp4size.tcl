@@ -1,12 +1,12 @@
 ##########################################################################
-# ngBot - mkvsize Plug-in                                                #
+# ngBot - mp4size Plug-in                                                #
 ##########################################################################
 
-namespace eval ::ngBot::plugin::mkvsize {
+namespace eval ::ngBot::plugin::mp4Size {
 	variable ns [namespace current]
 	variable np [namespace qualifiers [namespace parent]]
 
-	variable ircTrigger "[set ${np}::cmdpre]mkvsize"
+	variable ircTrigger "[set ${np}::cmdpre]mp4size"
 	variable outputChan [set ${np}::mainchan]
 
 	## Keep version in sync with the Makefile
@@ -16,7 +16,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 	variable scriptName [namespace current]::check
 
 	proc log {args} {
-		putlog "\[mkvsize\] [join $args]"
+		putlog "\[mp4size\] [join $args]"
 	}
 
 	proc init {args} {
@@ -31,9 +31,9 @@ namespace eval ::ngBot::plugin::mkvsize {
 		variable outputChan
 		variable version
 
-		set variables(MKV_DONE_OK)    "%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
-		set variables(MKV_DONE_BAD)   "%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
-		set variables(MKV_DONE_NOHIT) "%argument"
+		set variables(MP4_DONE_OK)    "%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
+		set variables(MP4_DONE_BAD)   "%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
+		set variables(MP4_DONE_NOHIT) "%argument"
 
 		set theme_file [file normalize "[pwd]/[file rootname $scriptFile].zpt"]
 		if {[file isfile $theme_file]} {
@@ -41,7 +41,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 		}
 
 		# Add event handler
-		set event MKV_DONE
+		set event MP4_DONE
 		lappend precommand($event) $scriptName
 
 		if {[info exists msgtypes(SECTION)] && [lsearch -exact $msgtypes(SECTION) $event] ==  -1} {
@@ -71,7 +71,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 		catch {unbind pub -|- $ircTrigger [namespace current]::irc}
 
 		# Remove event handler
-		set event MKV_DONE
+		set event MP4_DONE
 		if {[info exists precommand($event)] && [set pos [lsearch -exact $precommand($event) $scriptName]] !=  -1} {
 			set precommand($event) [lreplace $precommand($event) $pos $pos]
 		}
@@ -101,19 +101,19 @@ namespace eval ::ngBot::plugin::mkvsize {
 		set abspath $glroot$path
 		set file [lindex $logdata 1]
 
-		lassign [doIt $abspath/$file] result mkvSize fileSize
+		lassign [doIt $abspath/$file] result mp4Size fileSize
 
-		set formattedMkvSize [${np}::format_kb [expr $mkvSize/1024.0]]
+		set formattedMp4Size [${np}::format_kb [expr $mp4Size/1024.0]]
 		set formattedFileSize [${np}::format_kb [expr $fileSize/1024.0]]
 
 		if ($result) {
-			set event MKV_DONE_OK
+			set event MP4_DONE_OK
 		} else {
-			set event MKV_DONE_BAD
+			set event MP4_DONE_BAD
 		}
 
 		set release [findRelease $path]
-		lappend logdata $section $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize
+		lappend logdata $section $release $mp4Size $formattedMp4Size $fileSize $formattedFileSize
 
 		set output [${np}::ng_format $event $section $logdata]
 		${np}::sndall $event $section $output
@@ -136,13 +136,13 @@ namespace eval ::ngBot::plugin::mkvsize {
 	}
 
 	proc doIt {file} {
-		set mkvSize [ebml::parseFile $file]
+		set mp4Size [parseFile $file]
 
 		set fileSize [file size $file]
-		if {$mkvSize == $fileSize} {
-			return [list 1 $mkvSize $fileSize]
+		if {$mp4Size == $fileSize} {
+			return [list 1 $mp4Size $fileSize]
 		} else {
-			return [list 0 $mkvSize $fileSize]
+			return [list 0 $mp4Size $fileSize]
 		}
 	}
 
@@ -156,7 +156,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 		set files [list]
 		set dir ""
 
-		if {[file isfile $path] && [file extension $path] == ".mkv"} {
+		if {[file isfile $path] && [file extension $path] == ".mp4"} {
 			set files [list $path]
 		} elseif {[file isdir $path]} {
 			set dir $path
@@ -166,12 +166,12 @@ namespace eval ::ngBot::plugin::mkvsize {
 
 		if {[llength $files] == 0} {
 			if {$dir != ""} {
-				set files [findMkvInRelease $dir]
+				set files [findMp4InRelease $dir]
 			}
 
 			if {[llength $files] == 0} {
 				lappend logdata $arg
-				set output [${np}::ng_format MKV_DONE_NOHIT irc $logdata]
+				set output [${np}::ng_format MP4_DONE_NOHIT irc $logdata]
 				set output [${np}::themereplace $output irc]
 				putserv "PRIVMSG $chan :$output"
 				return 1
@@ -179,20 +179,20 @@ namespace eval ::ngBot::plugin::mkvsize {
 		}
 
 		foreach file $files {
-			set mkvSize [ebml::parseFile $file]
+			set mp4Size [parseFile $file]
 			set fileSize [file size $file]
-			set formattedMkvSize [${np}::format_kb [expr $mkvSize/1024.0]]
+			set formattedMp4Size [${np}::format_kb [expr $mp4Size/1024.0]]
 			set formattedFileSize [${np}::format_kb [expr $fileSize/1024.0]]
 
 			set path [file dirname [string range $file [string length $glroot] end]]
 			set fileName [file tail $file]
 			set release [findReleaseName $path]
 
-			lappend logdata $path $fileName irc $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize
-			if {$mkvSize == $fileSize} {
-				set output [${np}::ng_format MKV_DONE_OK irc $logdata]
+			lappend logdata $path $fileName irc $release $mp4Size $formattedMp4Size $fileSize $formattedFileSize
+			if {$mp4Size == $fileSize} {
+				set output [${np}::ng_format MP4_DONE_OK irc $logdata]
 			} else {
-				set output [${np}::ng_format MKV_DONE_BAD irc $logdata]
+				set output [${np}::ng_format MP4_DONE_BAD irc $logdata]
 			}
 			set output [${np}::themereplace $output irc]
 			putserv "PRIVMSG $chan :$output"
@@ -243,12 +243,12 @@ namespace eval ::ngBot::plugin::mkvsize {
 		return ""
 	}
 
-	proc findMkvInRelease {dir} {
-		set files [glob -nocomplain -type f -dir $dir *.mkv]
+	proc findMp4InRelease {dir} {
+		set files [glob -nocomplain -type f -dir $dir *.mp4]
 		if {[llength $files] == 0} {
 			set i 0
 			foreach subdir [glob -nocomplain -type d -dir $dir *] {
-				lappend files [glob -nocomplain -type f -dir $subdir *.mkv]
+				lappend files [glob -nocomplain -type f -dir $subdir *.mp4]
 				if {$i > 5} {
 					break
 				}
@@ -265,96 +265,42 @@ namespace eval ::ngBot::plugin::mkvsize {
 		return $files
 	}
 
-	#
-	# EBML parsing
-	#
+	proc parseFile {filename} {
+		set fp [open $filename r]
+		chan configure $fp -translation binary
 
-	namespace eval [namespace current]::ebml {
-		proc log {args} {
-			putlog "\[mkvsize::ebml\] [join $args]"
-		}
-
-		proc getId {fp} {
-			set data [read $fp 1]
-
-			if {[binary scan $data cu firstByte] != 1} {
-				return ""
+		set expected [file size $filename]
+		set size 0
+		set i 0
+		while {![eof $fp] && $size < $expected} {
+			set chunkSize [parseChunk $fp]
+			if {$chunkSize == -1} {
+				log "parseFile returned -1 at position [tell $fp], eof: [eof $fp]"
+				set size -1
+				break
 			}
+			incr size $chunkSize
+			seek $fp $size start
+			log moved cursor to $size
+			incr i
+		}
+		close $fp
 
-			set size 0
-			for {set i 7} {$i >= 0} {incr i -1} {
-				if {[expr {$firstByte & (1 << $i)}]} {
-					set size [expr 7-$i]
-					break
-						}
-				}
+		return $size
+	}
 
-			append data [read $fp $size]
-			binary scan $data H* id
-			return $id
+	proc parseChunk {fp} {
+		if {[binary scan [read $fp 4] Iu size] != 1} {
+			return -1
 		}
 
-		proc getSize {fp} {
-			set data [read $fp 1]
-
-			if {[binary scan $data cu firstByte] != 1} {
+		if {$size == 1} {
+			seek $fp 4 current
+			if {[binary scan [read $fp 8] Wu size] != 1} {
 				return -1
 			}
-
-			set size 0
-			for {set i 7} {$i >= 0} {incr i -1} {
-				if {[expr {$firstByte & (1 << $i)}]} {
-					set size [expr 7-$i]
-					break
-				}
-			}
-
-			set data [binary format cu [expr {$firstByte & ~(1 << (7-$size))}]]
-
-			binary scan $data cu test
-
-			append data [read $fp $size]
-			set data "[string repeat \00 [expr {8-[string length $data]}]]$data"
-			binary scan $data W sizeSize
-
-			return $sizeSize
 		}
 
-		proc parseChunk {fp} {
-			set id [getId $fp]
-			set size [getSize $fp]
-
-			if {$id == "" || $size == -1} {
-				return -1
-			}
-
-			switch -exact -nocase $id {
-				18538067 {
-					return [expr $size + [tell $fp]]
-				}
-
-				default {
-					seek $fp $size current
-				}
-			}
-
-			return 0
-		}
-
-		proc parseFile {filename} {
-			set fp [open $filename r]
-			chan configure $fp -translation binary
-
-			set res 0
-			while {![eof $fp] && $res == 0} {
-				set res [parseChunk $fp]
-				if {$res == -1} {
-					log "parseChunk returned -1 at position [tell $fp], eof: [eof $fp]"
-				}
-			}
-			close $fp
-
-			return $res
-		}
+		return $size
 	}
 }

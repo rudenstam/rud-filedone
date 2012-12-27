@@ -9,6 +9,7 @@
 
 
 #define PROCESS_MKV 1
+#define PROCESS_MP4 1
 #define PROCESS_RAR 1
 #define ZIPSCRIPT "/bin/zipscript-c"
 #define GL_LOG "/ftp-data/logs/glftpd.log"
@@ -109,6 +110,16 @@ int main(int argc, char *argv[]) {
 	if (!strcmp(ext, ".mkv")) {
 #if PROCESS_MKV == 1
 		snprintf(completeString, sizeof(completeString), "%s MKV_DONE: %s %s\n", timeStr, path, filename);
+		if (debug) {
+			writeLog("rud-filedone-glftpd.log", completeString);
+		} else {
+			writeLog(GL_LOG, completeString);
+			writeLog(LOG_FILE, completeString);
+		}
+#endif
+	} else if (!strcmp(ext, ".mp4")) {
+#if PROCESS_MP4
+		snprintf(completeString, sizeof(completeString), "%s MP4_DONE: %s %s\n", timeStr, path, filename);
 		if (debug) {
 			writeLog("rud-filedone-glftpd.log", completeString);
 		} else {

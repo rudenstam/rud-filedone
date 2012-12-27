@@ -1,5 +1,5 @@
 # Keep this in sync with Tcl script which will print to partyline what version it uses
-VERSION := 0.3
+VERSION := 0.4
 
 CC := gcc
 CFLAGS := -c -Wall -O2
@@ -28,7 +28,7 @@ endif
 bundle :
 	rm rud-filedone.*.tar.bz
 	mkdir -p /tmp/rud-filedone
-	cp rud-filedone.c Makefile README rud-mkvsize.tcl rud-mkvsize.zpt rud-filedone-test.tcl CHANGELOG /tmp/rud-filedone/
+	cp rud-filedone.c Makefile README rud-mkvsize.tcl rud-mkvsize.zpt rud-mp4size.tcl rud-mp4size.zpt rud-filedone-test.tcl CHANGELOG /tmp/rud-filedone/
 	tar -C /tmp/ -f rud-filedone.$(VERSION).$(SHA1).tar.bz -v -j -c rud-filedone
 	rm -rf /tmp/rud-filedone
 

@@ -1,6 +1,9 @@
+0.4:
+* Rewrote rud-mkvsize.tcl for ngBot.
++ Added rud-mp4size.tcl.
+
 0.3:
 * Rewrote parsing logics in rud-mkvsize.tcl to use EBML rules.
-* Rewrote rud-mkvsize.tcl for ngBot.
 
 0.2:
 + Added a CHANGELOG
