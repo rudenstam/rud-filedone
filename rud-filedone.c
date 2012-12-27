@@ -130,7 +130,9 @@ int main(int argc, char *argv[]) {
 #endif
 	}
 
-	wait(NULL);
-
-	exit(0);
+	int status;
+	wait(&status);
+	if (WIFEXITED(status))
+		exit(WEXITSTATUS(status));
+	exit(1);
 }
