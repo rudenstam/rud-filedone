@@ -15,14 +15,14 @@ make install DEST=<destination>
 And a real example:
 make install DEST=/jail/glftpd/bin/
 
-With this package (so far) rud-mkvsize.tcl is included, it needs to be fixed
-a bit though to work as a pzs-ng plugin and load itself and so on.
+With this package (so far) rud-mkvsize.tcl is included.
 
 For now, copy it somewhere into your bot and source it after your pzs-ng and
 it should work.
 
-There's no config at all in it yet, so if you want to change anything with
-output or so, please hack it.
+The only configuration is which irc trigger should be used and is set as a
+variable in the beginning of rud-mkvsize.tcl file. Output configuration is done
+in rud-mkvsize.zpt file as per ngBot style.
 
 
 Best regards
