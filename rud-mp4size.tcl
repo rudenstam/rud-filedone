@@ -266,6 +266,10 @@ namespace eval ::ngBot::plugin::mp4Size {
 	}
 
 	proc parseFile {filename} {
+		if {![file exists $filename]} {
+			return -1
+		}
+
 		set fp [open $filename r]
 		chan configure $fp -translation binary
 

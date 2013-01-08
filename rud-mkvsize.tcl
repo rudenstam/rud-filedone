@@ -342,6 +342,10 @@ namespace eval ::ngBot::plugin::mkvsize {
 		}
 
 		proc parseFile {filename} {
+			if {![file exists $filename]} {
+				return -1
+			}
+
 			set fp [open $filename r]
 			chan configure $fp -translation binary
 
