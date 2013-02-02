@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <wait.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define PROCESS_MKV 1
 #define PROCESS_MP4 1
@@ -75,6 +77,8 @@ int main(int argc, char *argv[]) {
 	char timeStr[128];
 	char *ext = "";
 	char completeString[4096];
+	struct stat fileinfo;
+	char uid[10];
 
 	if (argc != 4)
 		debug = 1;
@@ -105,11 +109,17 @@ int main(int argc, char *argv[]) {
 	t = time(NULL);
 	strftime(timeStr, sizeof(timeStr), "%a %b %e %T %Y", localtime(&t));
 
+	if (stat(filename, &fileinfo) == 0) {
+		snprintf(uid, sizeof(uid), "%u", fileinfo.st_uid);
+	} else {
+		snprintf(uid, sizeof(uid), "???");
+	}
+
 	ext = strrchr(filename, '.');
 
 	if (!strcmp(ext, ".mkv")) {
 #if PROCESS_MKV == 1
-		snprintf(completeString, sizeof(completeString), "%s MKV_DONE: %s %s\n", timeStr, path, filename);
+		snprintf(completeString, sizeof(completeString), "%s MKV_DONE: %s %s %s\n", timeStr, path, filename, uid);
 		if (debug) {
 			writeLog("rud-filedone-glftpd.log", completeString);
 		} else {
@@ -119,7 +129,7 @@ int main(int argc, char *argv[]) {
 #endif
 	} else if (!strcmp(ext, ".mp4")) {
 #if PROCESS_MP4
-		snprintf(completeString, sizeof(completeString), "%s MP4_DONE: %s %s\n", timeStr, path, filename);
+		snprintf(completeString, sizeof(completeString), "%s MP4_DONE: %s %s %s\n", timeStr, path, filename, uid);
 		if (debug) {
 			writeLog("rud-filedone-glftpd.log", completeString);
 		} else {

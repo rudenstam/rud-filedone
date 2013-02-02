@@ -6,6 +6,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 	variable ns [namespace current]
 	variable np [namespace qualifiers [namespace parent]]
 
+	variable passwd "/jail/glftpd/etc/passwd"
 	variable ircTrigger "[set ${np}::cmdpre]mkvsize"
 	variable outputChan [set ${np}::mainchan]
 
@@ -31,9 +32,11 @@ namespace eval ::ngBot::plugin::mkvsize {
 		variable outputChan
 		variable version
 
-		set variables(MKV_DONE_OK)    "%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
-		set variables(MKV_DONE_BAD)   "%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
-		set variables(MKV_DONE_NOHIT) "%argument"
+		set variables(MKV_DONE_OK)		"%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize %owner"
+		set variables(MKV_DONE_BAD)		"%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize %owner"
+		set variables(MKV_DONE_IRC_OK)		"%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
+		set variables(MKV_DONE_IRC_BAD)		"%path %file %section %release %expectedSize %formattedExpectedSize %realSize %formattedRealSize"
+		set variables(MKV_DONE_IRC_NOHIT)	"%argument"
 
 		set theme_file [file normalize "[pwd]/[file rootname $scriptFile].zpt"]
 		if {[file isfile $theme_file]} {
@@ -97,9 +100,8 @@ namespace eval ::ngBot::plugin::mkvsize {
 		variable np
 		variable ${np}::glroot
 
-		set path [lindex $logdata 0]
+		lassign $logdata path file uid
 		set abspath $glroot$path
-		set file [lindex $logdata 1]
 
 		lassign [doIt $abspath/$file] result mkvSize fileSize
 
@@ -112,8 +114,10 @@ namespace eval ::ngBot::plugin::mkvsize {
 			set event MKV_DONE_BAD
 		}
 
+		set owner [getOwner $uid]
+		set logdata [lreplace $logdata 2 2]
 		set release [findRelease $path]
-		lappend logdata $section $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize
+		lappend logdata $section $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize $owner
 
 		set output [${np}::ng_format $event $section $logdata]
 		${np}::sndall $event $section $output
@@ -171,7 +175,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 
 			if {[llength $files] == 0} {
 				lappend logdata $arg
-				set output [${np}::ng_format MKV_DONE_NOHIT irc $logdata]
+				set output [${np}::ng_format MKV_DONE_IRC_NOHIT irc $logdata]
 				set output [${np}::themereplace $output irc]
 				putserv "PRIVMSG $chan :$output"
 				return 1
@@ -190,9 +194,9 @@ namespace eval ::ngBot::plugin::mkvsize {
 
 			lappend logdata $path $fileName irc $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize
 			if {$mkvSize == $fileSize} {
-				set output [${np}::ng_format MKV_DONE_OK irc $logdata]
+				set output [${np}::ng_format MKV_DONE_IRC_OK irc $logdata]
 			} else {
-				set output [${np}::ng_format MKV_DONE_BAD irc $logdata]
+				set output [${np}::ng_format MKV_DONE_IRC_BAD irc $logdata]
 			}
 			set output [${np}::themereplace $output irc]
 			putserv "PRIVMSG $chan :$output"
@@ -263,6 +267,26 @@ namespace eval ::ngBot::plugin::mkvsize {
 		}
 
 		return $files
+	}
+
+	proc getOwner {userid} {
+		variable passwd
+
+		if {![file exists $passwd]} {
+			return "???"
+		}
+
+		set fp [open $passwd r]
+		set data [split [read $fp] \n]
+		close $fp
+
+		foreach line $data {
+			lassign [split $line ":"] name pass uid gid comment home shell
+			if {$userid eq $uid} {
+				return $name
+			}
+		}
+		return "???"
 	}
 
 	#
