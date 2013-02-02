@@ -174,14 +174,13 @@ namespace eval ::ngBot::plugin::mkvsize {
 			}
 
 			if {[llength $files] == 0} {
-				lappend logdata $arg
+				set logdata $arg
 				set output [${np}::ng_format MKV_DONE_IRC_NOHIT irc $logdata]
 				set output [${np}::themereplace $output irc]
 				putserv "PRIVMSG $chan :$output"
 				return 1
 			}
 		}
-
 		foreach file $files {
 			set mkvSize [ebml::parseFile $file]
 			set fileSize [file size $file]
@@ -192,7 +191,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 			set fileName [file tail $file]
 			set release [findReleaseName $path]
 
-			lappend logdata $path $fileName irc $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize
+			set logdata [list $path $fileName irc $release $mkvSize $formattedMkvSize $fileSize $formattedFileSize]
 			if {$mkvSize == $fileSize} {
 				set output [${np}::ng_format MKV_DONE_IRC_OK irc $logdata]
 			} else {
@@ -252,7 +251,9 @@ namespace eval ::ngBot::plugin::mkvsize {
 		if {[llength $files] == 0} {
 			set i 0
 			foreach subdir [glob -nocomplain -type d -dir $dir *] {
-				lappend files [glob -nocomplain -type f -dir $subdir *.mkv]
+				foreach file [glob -nocomplain -type f -dir $subdir *.mkv] {
+					lappend files $file
+				}
 				if {$i > 5} {
 					break
 				}
@@ -260,6 +261,7 @@ namespace eval ::ngBot::plugin::mkvsize {
 			}
 		}
 
+		# remove empty entries from the list
 		for {set i 0} {$i < [llength $files]} {incr i} {
 			while {[llength $files] > $i && [string trim [lindex $files $i]] == ""} {
 				set files [lreplace $files $i $i]
