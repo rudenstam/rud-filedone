@@ -311,7 +311,6 @@ namespace eval ::ngBot::plugin::mp4Size {
 			}
 			incr size $chunkSize
 			seek $fp $size start
-			log moved cursor to $size
 			incr i
 		}
 		close $fp
