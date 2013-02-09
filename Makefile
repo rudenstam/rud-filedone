@@ -4,15 +4,13 @@ VERSION := 0.4
 CC := gcc
 CFLAGS := -c -Wall -O2
 
-SHA1 = $(shell git show | head -n 1 | sed s/"commit "// | head -c 6)
-
 rud-filedone : rud-filedone.o
 
 %.o : %.c
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean :
-	rm -f rud-filedone rud-filedone.o rud-filedone.*.tar.bz
+	rm -f rud-filedone rud-filedone.o
 
 install : rud-filedone
 ifndef DEST
@@ -24,13 +22,6 @@ else
 	cp rud-filedone $(DEST)
   endif
 endif
-
-bundle :
-	rm rud-filedone.*.tar.bz
-	mkdir -p /tmp/rud-filedone
-	cp rud-filedone.c Makefile README rud-mkvsize.tcl rud-mkvsize.zpt rud-mp4size.tcl rud-mp4size.zpt rud-filedone-test.tcl CHANGELOG /tmp/rud-filedone/
-	tar -C /tmp/ -f rud-filedone.$(VERSION).$(SHA1).tar.bz -v -j -c rud-filedone
-	rm -rf /tmp/rud-filedone
 
 test: rud-filedone
 ifndef BIN
@@ -44,4 +35,4 @@ else
 endif
 
 
-.PHONY: install clean bundle test
+.PHONY: install clean test
