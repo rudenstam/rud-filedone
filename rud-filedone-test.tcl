@@ -24,7 +24,7 @@ set expectedZip {/bin/zipscript-c my.filename-group.mkv MyDirName0 0
 /bin/zipscript-c indiana.jones.and.the.kingdom.of.the.crystal.skull.2008.1080p.bluray.x264-sinners.part00001.rar MyDirName8 987654312
 /bin/zipscript-c indiana.testfile.sfv MyDirName9 1111111101}
 
-set expectedGL {MKV_DONE: MyDirName0 my.filename-group.mkv
+set expectedGL {MKV_DONE: MyDirName0 my.filename-group.mkv ???
 FIRST_RAR: MyDirName2 geckos-btbr2010-1080.rar
 FIRST_RAR: MyDirName3 indiana.jones.and.the.kingdom.of.the.crystal.skull.2008.1080p.bluray.x264-sinners.part01.rar
 FIRST_RAR: MyDirName5 indiana.jones.and.the.kingdom.of.the.crystal.skull.2008.1080p.bluray.x264-sinners.part1.rar
