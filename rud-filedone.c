@@ -37,6 +37,7 @@ error:
 	return -errno;
 }
 
+#ifndef SAMPLESCRIPT
 int firstRar(const char *filename) {
 	const char *tmp;
 
@@ -69,6 +70,7 @@ int firstRar(const char *filename) {
 
 	return 0;
 }
+#endif
 
 int main(int argc, char *argv[]) {
 	char *filename = argv[1];
@@ -83,6 +85,7 @@ int main(int argc, char *argv[]) {
 	if (argc != 4)
 		debug = 1;
 
+#ifndef SAMPLESCRIPT
 	if (fork() == 0) {
 		if (argc > 4)
 			argc = 4;
@@ -105,6 +108,7 @@ int main(int argc, char *argv[]) {
 			exit(127);
 		}
 	}
+#endif
 
 	t = time(NULL);
 	strftime(timeStr, sizeof(timeStr), "%a %b %e %T %Y", localtime(&t));
@@ -138,7 +142,7 @@ int main(int argc, char *argv[]) {
 		}
 #endif
 	} else if (!strcmp(ext, ".rar")) {
-#if PROCESS_RAR == 1
+#if PROCESS_RAR == 1 && !defined(SAMPLESCRIPT)
 		if (firstRar(filename)) {
 			snprintf(completeString, sizeof(completeString), "%s FIRST_RAR: %s %s\n", timeStr, path, filename);
 			if (debug) {
@@ -151,9 +155,13 @@ int main(int argc, char *argv[]) {
 #endif
 	}
 
+#ifndef SAMPLESCRIPT
 	int status;
 	wait(&status);
 	if (WIFEXITED(status))
 		exit(WEXITSTATUS(status));
 	exit(1);
+#else
+	exit(0);
+#endif
 }

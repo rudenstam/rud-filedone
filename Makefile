@@ -6,22 +6,14 @@ CFLAGS := -c -Wall -O2
 
 rud-filedone : rud-filedone.o
 
-%.o : %.c
+samplescript : CFLAGS += -DSAMPLESCRIPT
+samplescript : rud-filedone
+
+%.o : %.c .FORCE
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean :
 	rm -f rud-filedone rud-filedone.o
-
-install : rud-filedone
-ifndef DEST
-	$(error Usage: make install DEST=<destination>)
-else
-  ifeq (,$(wildcard $(DEST)))
-	$(error $(DEST) doesn't exist.)
-  else
-	cp rud-filedone $(DEST)
-  endif
-endif
 
 test: rud-filedone
 ifndef BIN
@@ -34,5 +26,6 @@ else
   endif
 endif
 
+.FORCE :
 
 .PHONY: install clean test
