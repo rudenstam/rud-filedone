@@ -1,9 +1,11 @@
-0.4:
-* Rewrote rud-mkvsize.tcl for ngBot.
-+ Added rud-mp4size.tcl.
+0.5
 + Added support for printing the owner of the file
 * Fixed irc trigger for directories containing multiple files
 * Removed debug print from rud-mp4size.tcl
+
+0.4:
+* Rewrote rud-mkvsize.tcl for ngBot.
++ Added rud-mp4size.tcl.
 
 0.3:
 * Rewrote parsing logics in rud-mkvsize.tcl to use EBML rules.
